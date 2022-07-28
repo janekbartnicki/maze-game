@@ -1,9 +1,10 @@
 const {Engine, Render, Runner, World, Bodies} = Matter;
 
-const cells = 3;
+const cells = 15;
 const width = 600;
-const height = 600;
+const height = 600
 
+const wallWidth = 1;
 const unitLength = width / cells;
 
 const engine = Engine.create();
@@ -22,16 +23,16 @@ Runner.run(Runner.create(), engine);
 
 //walls
 const walls = [
-    Bodies.rectangle(width / 2, 0, width, 5, {
+    Bodies.rectangle(width / 2, 0, width, wallWidth, {
         isStatic: true
     }),
-    Bodies.rectangle(width / 2, height, width, 5, {
+    Bodies.rectangle(width / 2, height, width, wallWidth, {
         isStatic: true
     }),
-    Bodies.rectangle(0, height / 2, 5, height, {
+    Bodies.rectangle(0, height / 2, wallWidth, height, {
         isStatic: true
     }),
-    Bodies.rectangle(width, height / 2, 5, height, {
+    Bodies.rectangle(width, height / 2, wallWidth, height, {
         isStatic: true
     })
 ]
@@ -118,27 +119,62 @@ horizontals.forEach((row, rowIndex) => {
                     isStatic: true
                 }
             );
-
             World.add(world, wall);
         } else return;
     })
-})
+});
 
 verticals.forEach((row, rowIndex) => {
     row.forEach((open, columnIndex) => {
         if(!open) {
             const wall = Bodies.rectangle(
-                
-                rowIndex * unitLength + unitLength,
-                columnIndex * unitLength + unitLength / 2,
-                unitLength,
+                columnIndex * unitLength + unitLength,
+                rowIndex * unitLength + unitLength / 2,
                 1,
+                unitLength,
                 {
                     isStatic: true
                 }
             );
-
             World.add(world, wall);
         } else return;
     })
+});
+
+const goal = Bodies.rectangle(
+    width - unitLength / 2,
+    height - unitLength / 2,
+    unitLength / 3, 
+    unitLength / 3, 
+    {
+        isStatic: true
+    }
+);
+World.add(world, goal);
+
+const player = Bodies.circle(
+    unitLength / 2,
+    unitLength / 2,
+    unitLength* .3,
+    {
+        isStatic: true
+    }
+);
+World.add(world, player);
+
+document.addEventListener('keydown', function(event) {
+    switch(event.keyCode){
+        case(87):
+            console.log('w wciśnięte')
+            break;
+        case(83):
+            console.log('s wciśnięte')
+            break;
+        case(65):
+            console.log('a wciśnięte')
+            break;
+        case(68):
+            console.log('d wciśnięte')
+            break;
+    }
 })

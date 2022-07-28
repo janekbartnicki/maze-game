@@ -1,10 +1,11 @@
-const {Engine, Render, Runner, World, Bodies, Body} = Matter;
+const {Engine, Render, Runner, World, Bodies, Body, Events} = Matter;
 
-const cells = 15;
+const cells = 6;
 const width = 600;
 const height = 600
 
-const wallWidth = 5;
+const outerWallWidth = 5;
+const innerWallWidth = 3;
 const unitLength = width / cells;
 
 const engine = Engine.create();
@@ -20,19 +21,20 @@ const render = Render.create({
 });
 Render.run(render);
 Runner.run(Runner.create(), engine);
+engine.world.gravity.y = 0;
 
 //walls
 const walls = [
-    Bodies.rectangle(width / 2, 0, width, wallWidth, {
+    Bodies.rectangle(width / 2, 0, width, outerWallWidth, {
         isStatic: true
     }),
-    Bodies.rectangle(width / 2, height, width, wallWidth, {
+    Bodies.rectangle(width / 2, height, width, outerWallWidth, {
         isStatic: true
     }),
-    Bodies.rectangle(0, height / 2, wallWidth, height, {
+    Bodies.rectangle(0, height / 2, outerWallWidth, height, {
         isStatic: true
     }),
-    Bodies.rectangle(width, height / 2, wallWidth, height, {
+    Bodies.rectangle(width, height / 2, outerWallWidth, height, {
         isStatic: true
     })
 ]
@@ -114,8 +116,9 @@ horizontals.forEach((row, rowIndex) => {
                 columnIndex * unitLength + unitLength / 2,
                 rowIndex * unitLength + unitLength,
                 unitLength,
-                1,
+                innerWallWidth,
                 {
+                    label: 'innerWall',
                     isStatic: true
                 }
             );
@@ -130,9 +133,10 @@ verticals.forEach((row, rowIndex) => {
             const wall = Bodies.rectangle(
                 columnIndex * unitLength + unitLength,
                 rowIndex * unitLength + unitLength / 2,
-                1,
+                innerWallWidth,
                 unitLength,
                 {
+                    label: 'innerWall',
                     isStatic: true
                 }
             );
@@ -147,6 +151,7 @@ const goal = Bodies.rectangle(
     unitLength / 3, 
     unitLength / 3, 
     {
+        label: 'goal',
         isStatic: true
     }
 );
@@ -155,7 +160,10 @@ World.add(world, goal);
 const player = Bodies.circle(
     unitLength / 2,
     unitLength / 2,
-    unitLength* .3
+    unitLength* .3,
+    {
+        label: 'player'
+    }
 );
 World.add(world, player);
 
@@ -177,3 +185,20 @@ document.addEventListener('keydown', function(event) {
             break;
     }
 })
+
+//win condition
+
+Events.on(engine, 'collisionStart', event => {
+    event.pairs.forEach(collision => {
+        const labels = ['player', 'goal'];
+        if(labels.includes(collision.bodyA.label) && labels.includes(collision.bodyB.label)) {
+            world.gravity.y = 1;
+            world.bodies.forEach(body => {
+                if(body.label === 'innerWall') {
+                    Body.setStatic(body, false);
+                }
+            })
+            setTimeout(() => world.gravity.y = 0, 100)
+        }
+    }
+)})

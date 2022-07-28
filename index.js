@@ -1,10 +1,10 @@
-const {Engine, Render, Runner, World, Bodies} = Matter;
+const {Engine, Render, Runner, World, Bodies, Body} = Matter;
 
 const cells = 15;
 const width = 600;
 const height = 600
 
-const wallWidth = 1;
+const wallWidth = 5;
 const unitLength = width / cells;
 
 const engine = Engine.create();
@@ -155,26 +155,25 @@ World.add(world, goal);
 const player = Bodies.circle(
     unitLength / 2,
     unitLength / 2,
-    unitLength* .3,
-    {
-        isStatic: true
-    }
+    unitLength* .3
 );
 World.add(world, player);
 
 document.addEventListener('keydown', function(event) {
+    const {x, y} = player.velocity;
+
     switch(event.keyCode){
         case(87):
-            console.log('w wciśnięte')
+            Body.setVelocity(player, {x, y: y - 5});
             break;
         case(83):
-            console.log('s wciśnięte')
+            Body.setVelocity(player, {x, y: y + 5});
             break;
         case(65):
-            console.log('a wciśnięte')
+            Body.setVelocity(player, {x: x - 5, y});
             break;
         case(68):
-            console.log('d wciśnięte')
+        Body.setVelocity(player, {x: x + 5, y});
             break;
     }
 })

@@ -1,12 +1,14 @@
 const {Engine, Render, Runner, World, Bodies, Body, Events} = Matter;
 
-const cells = 6;
-const width = 600;
-const height = 600
+const cellsHorizontal = 3; //15
+const cellsVertical = 3; //10
+const width = window.innerWidth;
+const height = window.innerHeight;
 
 const outerWallWidth = 5;
 const innerWallWidth = 3;
-const unitLength = width / cells;
+const unitLengthX = width / cellsHorizontal;
+const unitLengthY = height / cellsVertical;
 
 const engine = Engine.create();
 const {world} = engine;
@@ -14,7 +16,7 @@ const render = Render.create({
     element: document.body,
     engine: engine,
     options: {
-        wireframes: true,
+        wireframes: false,
         width,
         height
     }
@@ -55,20 +57,20 @@ const shuffle = (arr) => {
     return arr;
 }
 
-const grid = Array(cells)
+const grid = Array(cellsVertical)
     .fill(null)
-    .map(() => Array(cells).fill(false));
+    .map(() => Array(cellsHorizontal).fill(false));
 
-const verticals = Array(cells)
+const verticals = Array(cellsVertical)
     .fill(null)
-    .map(() => Array(cells - 1).fill(false));
+    .map(() => Array(cellsHorizontal - 1).fill(false));
 
-const horizontals = Array(cells - 1)
+const horizontals = Array(cellsVertical - 1)
     .fill(null)
-    .map(() => Array(cells).fill(false));
+    .map(() => Array(cellsHorizontal).fill(false));
 
-const startRow = Math.floor(Math.random() * cells);
-const startColumn = Math.floor(Math.random() * cells);
+const startRow = Math.floor(Math.random() * cellsVertical);
+const startColumn = Math.floor(Math.random() * cellsHorizontal);
 
 const stepThroughCell = (row, column) => {
     if(grid[row][column]) return;
@@ -85,7 +87,7 @@ const stepThroughCell = (row, column) => {
     for(let neighbor of neighbors) {
         const [nextRow, nextColumn, direction] = neighbor;
 
-        if(nextRow < 0 || nextRow >= cells || nextColumn < 0 || nextColumn >= cells) {
+        if(nextRow < 0 || nextRow >= cellsVertical || nextColumn < 0 || nextColumn >= cellsHorizontal) {
             continue;
         }
 
@@ -113,13 +115,16 @@ horizontals.forEach((row, rowIndex) => {
     row.forEach((open, columnIndex) => {
         if(!open) {
             const wall = Bodies.rectangle(
-                columnIndex * unitLength + unitLength / 2,
-                rowIndex * unitLength + unitLength,
-                unitLength,
+                columnIndex * unitLengthX + unitLengthX / 2,
+                rowIndex * unitLengthY + unitLengthY,
+                unitLengthX,
                 innerWallWidth,
                 {
                     label: 'innerWall',
-                    isStatic: true
+                    isStatic: true,
+                    render: {
+                        fillStyle: 'blue'
+                    }
                 }
             );
             World.add(world, wall);
@@ -131,13 +136,16 @@ verticals.forEach((row, rowIndex) => {
     row.forEach((open, columnIndex) => {
         if(!open) {
             const wall = Bodies.rectangle(
-                columnIndex * unitLength + unitLength,
-                rowIndex * unitLength + unitLength / 2,
+                columnIndex * unitLengthX + unitLengthX,
+                rowIndex * unitLengthY + unitLengthY / 2,
                 innerWallWidth,
-                unitLength,
+                unitLengthY,
                 {
                     label: 'innerWall',
-                    isStatic: true
+                    isStatic: true,
+                    render: {
+                        fillStyle: 'blue'
+                    }
                 }
             );
             World.add(world, wall);
@@ -146,23 +154,30 @@ verticals.forEach((row, rowIndex) => {
 });
 
 const goal = Bodies.rectangle(
-    width - unitLength / 2,
-    height - unitLength / 2,
-    unitLength / 3, 
-    unitLength / 3, 
+    width - unitLengthX / 2,
+    height - unitLengthY / 2,
+    unitLengthX / 3, 
+    unitLengthY / 3, 
     {
         label: 'goal',
-        isStatic: true
+        isStatic: true,
+        render: {
+            fillStyle: 'green'
+        }
     }
 );
 World.add(world, goal);
 
+const playerRadius = Math.min(unitLengthX, unitLengthY) / 4;
 const player = Bodies.circle(
-    unitLength / 2,
-    unitLength / 2,
-    unitLength* .3,
+    unitLengthX / 2,
+    unitLengthY / 2,
+    playerRadius,
     {
-        label: 'player'
+        label: 'player',
+        render: {
+            fillStyle: '#f5d259'
+        }
     }
 );
 World.add(world, player);
@@ -181,7 +196,7 @@ document.addEventListener('keydown', function(event) {
             Body.setVelocity(player, {x: x - 5, y});
             break;
         case(68):
-        Body.setVelocity(player, {x: x + 5, y});
+            Body.setVelocity(player, {x: x + 5, y});
             break;
     }
 })
@@ -192,6 +207,8 @@ Events.on(engine, 'collisionStart', event => {
     event.pairs.forEach(collision => {
         const labels = ['player', 'goal'];
         if(labels.includes(collision.bodyA.label) && labels.includes(collision.bodyB.label)) {
+            document.querySelector('.winner').classList.remove('hidden');
+            document.querySelector('.winner-background').classList.remove('hidden');
             world.gravity.y = 1;
             world.bodies.forEach(body => {
                 if(body.label === 'innerWall') {
@@ -202,3 +219,6 @@ Events.on(engine, 'collisionStart', event => {
         }
     }
 )})
+
+const playAgainButton = document.querySelector('.winner button');
+playAgainButton.addEventListener('click', () => location.reload(true));
